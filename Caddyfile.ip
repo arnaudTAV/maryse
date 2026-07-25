@@ -1,0 +1,21 @@
+# Reverse proxy for bare-IP access (no domain pointed at this VPS yet).
+# Caddy cannot obtain a Let's Encrypt certificate for a raw IP address, so
+# this variant serves plain HTTP on port 80. Once a domain is pointed at the
+# VPS, switch to `Caddyfile` (same reverse_proxy block, but keyed by hostname)
+# and Caddy will provision TLS automatically — no other changes needed.
+:80 {
+    encode zstd gzip
+
+    # MCP Streamable-HTTP endpoint, the classic REST endpoint, and
+    # authenticated report downloads all live behind this one proxy.
+    reverse_proxy prepress-mcp:8080
+
+    # Cap request bodies at the app's max PDF size to shed abuse early.
+    request_body {
+        max_size 200MB
+    }
+
+    log {
+        output file /var/log/caddy/prepress.log
+    }
+}
