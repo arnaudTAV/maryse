@@ -1,0 +1,16 @@
+# Multi-tenant bearer-token registry.
+# Copy to tenants.toml and replace tokens with long random secrets:
+#   python -c "import secrets; print(secrets.token_urlsafe(32))"
+#
+# Each [tenants.<id>] block maps one tenant. `token` is the bearer the client
+# must send as `Authorization: Bearer <token>`. Tokens must be globally unique.
+
+[tenants.acme]
+name = "ACME Printing"
+token = "REPLACE_WITH_RANDOM_TOKEN_1"
+dpi_threshold = 300        # optional per-tenant override (dots per inch)
+
+[tenants.globex]
+name = "Globex Repro"
+token = "REPLACE_WITH_RANDOM_TOKEN_2"
+dpi_threshold = 225
