@@ -1,0 +1,43 @@
+# Two containers: the app (only reachable on the Docker network, not the
+# public internet) and Caddy in front of it (the only thing bound to 80/443).
+#
+# First run (no domain yet):   uses Caddyfile.ip, plain HTTP on port 80.
+# Once a domain points here:   edit the `caddy` volume line below to mount
+#                               ./Caddyfile instead, then `docker compose up -d`
+#                               again — Caddy fetches a Let's Encrypt cert
+#                               automatically, no app changes required.
+services:
+  prepress-mcp:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "8080"
+    volumes:
+      - ./tenants.toml:/srv/prepress/tenants.toml:ro
+      - prepress_reports:/srv/prepress/tenants
+    environment:
+      # Leave empty until a domain is set; the app then returns local file
+      # paths instead of URLs. Set to "https://your-domain" once TLS is live.
+      PREPRESS_PUBLIC_BASE_URL: ""
+      PREPRESS_REPORT_SIGNING_SECRET: "${PREPRESS_REPORT_SIGNING_SECRET:?set PREPRESS_REPORT_SIGNING_SECRET in .env}"
+      PREPRESS_REPORT_URL_TTL_S: "3600"
+      PREPRESS_DPI_THRESHOLD: "300"
+      PREPRESS_MAX_PDF_BYTES: "209715200"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - prepress-mcp
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.ip:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  prepress_reports:
+  caddy_data:
+  caddy_config:
