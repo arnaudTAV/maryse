@@ -1,0 +1,25 @@
+# Caddy reverse proxy with automatic TLS (Let's Encrypt).
+# Replace prepress.example.com with your domain and point DNS at this host.
+#
+# This variant assumes the Docker Compose deployment (see docker-compose.yml
+# and DEPLOY_HOSTINGER.md), where Caddy and the app run in separate
+# containers and reach each other via the Compose service name. If you are
+# instead running the app directly on the host via the systemd unit in
+# systemd/prepress-mcp.service (no Docker), change `prepress-mcp:8080` below
+# to `127.0.0.1:8080`.
+prepress.example.com {
+    encode zstd gzip
+
+    # MCP Streamable-HTTP endpoint, the classic REST endpoint, and
+    # authenticated report downloads all live behind this one proxy.
+    reverse_proxy prepress-mcp:8080
+
+    # Cap request bodies at the app's max PDF size to shed abuse early.
+    request_body {
+        max_size 200MB
+    }
+
+    log {
+        output file /var/log/caddy/prepress.log
+    }
+}
