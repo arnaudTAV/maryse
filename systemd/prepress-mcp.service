@@ -1,0 +1,27 @@
+[Unit]
+Description=Prepress MCP server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=prepress
+Group=prepress
+WorkingDirectory=/srv/prepress
+Environment=PREPRESS_TENANTS_FILE=/srv/prepress/tenants.toml
+Environment=PREPRESS_STORAGE_ROOT=/srv/prepress/tenants
+Environment=PREPRESS_PUBLIC_BASE_URL=https://prepress.example.com
+Environment=PREPRESS_PORT=8080
+ExecStart=/srv/prepress/.venv/bin/uvicorn prepress_mcp.server:application --host 127.0.0.1 --port 8080
+Restart=on-failure
+RestartSec=3
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/srv/prepress/tenants
+ReadOnlyPaths=/srv/prepress/tenants.toml
+
+[Install]
+WantedBy=multi-user.target
